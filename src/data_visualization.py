@@ -74,6 +74,12 @@ def data_visualization(data, file_to_save = None, preview = False, speed = 500):
         ax.set_ylim(y_center - max_range, y_center + max_range)
         ax.set_zlim(z_center - max_range, z_center + max_range)
         
+        # Add frame number in the top right corner
+        for text in ax.texts:
+            text.remove()
+        frame_text = f'Frame: {frame}'
+        ax.text2D(0.95, 0.95, frame_text, transform=ax.transAxes, ha='right', va='top', fontsize=12)
+        
         return lines
 
     # Assuming the number of frames is the number of timestamps in the data
