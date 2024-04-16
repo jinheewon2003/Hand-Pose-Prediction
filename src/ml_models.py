@@ -23,13 +23,14 @@ def first_split(X, y, perc = 0.8):
     return X_train, X_test, y_train, y_test
 
 def lstm_model(X_train, X_test, y_train, y_test):
-    # Reshape data for LSTM input (assuming each sequence has 1024 features)
-    X_train_reshaped = X_train.reshape(-1, 1, 1024)
-    X_test_reshaped = X_test.reshape(-1, 1, 1024)
+    # Reshape data for LSTM input
+    size = X_train.shape[1]
+    X_train_reshaped = X_train.reshape(-1, 1, size)
+    X_test_reshaped = X_test.reshape(-1, 1, size)
 
     # Define LSTM model with dropout regularization
     model = tf.keras.Sequential([
-        tf.keras.layers.LSTM(128, input_shape=(1, 1024), return_sequences=True),
+        tf.keras.layers.LSTM(128, input_shape=(1, size), return_sequences=True),
         tf.keras.layers.Dropout(0.2),  # Dropout layer with dropout rate of 0.2
         tf.keras.layers.LSTM(128),
         tf.keras.layers.Dropout(0.2),  # Dropout layer with dropout rate of 0.2
@@ -73,4 +74,4 @@ def lstm_model(X_train, X_test, y_train, y_test):
     for index, mse in enumerate(average_mses):
         print("Distance of Point " + str(index) + " from Actual Averaged: " + str(mse))
 
-    return y_pred
+    return y_pred, loss, average_mses

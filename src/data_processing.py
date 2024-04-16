@@ -1,12 +1,28 @@
 import pickle
 import numpy as np
 from pathlib import Path
-
+import json
+import os
 
 def read_pkl_file(file_path):
     with open(file_path, 'rb') as f:
         data = pickle.load(f)
     return data
+
+def save_list_to_json_file(lst, filename):
+    with open(filename, 'w') as file:
+        json.dump(lst, file)
+
+def grouped_files(folder_path):
+    info = {}
+    for filename in os.listdir(folder_path):
+        if os.path.isfile(os.path.join(folder_path, filename)):
+            group = filename.split("-r")[0]
+            if group in info:
+                info[group].append(filename)
+            else:
+                info[group] = [filename]
+    return info
 
 def process_data(file_name, new_file_name):
     # Open file and get data
