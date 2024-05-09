@@ -25,7 +25,7 @@ color_special_red = 'red'
 color_special_purple = 'purple'
 color_normal = 'blue'
 
-def data_visualization(data, file_to_save = None, preview = False, speed = 500):
+def data_visualization(data, file_to_save = None, preview = False, speed = 500, x_lim = 20.0, y_lim = 20.0, z_lim = 20.0):
     # Reshape data to (_, 21, 3) to split xyz values
     data = data.reshape(-1, 21, 3)
 
@@ -63,16 +63,20 @@ def data_visualization(data, file_to_save = None, preview = False, speed = 500):
             lines[i].set_color(color)
         
         # Find the limits for x, y, and z coordinates to resize
-        x = data[frame, :, 0]
-        y = data[frame, :, 1]
-        z = data[frame, :, 2]
-        x_center = np.mean(x)
-        y_center = np.mean(y)
-        z_center = np.mean(z)
-        max_range = np.array([x.max()-x.min(), y.max()-y.min(), z.max()-z.min()]).max() / 2
-        ax.set_xlim(x_center - max_range, x_center + max_range)
-        ax.set_ylim(y_center - max_range, y_center + max_range)
-        ax.set_zlim(z_center - max_range, z_center + max_range)
+        # x = data[frame, :, 0]
+        # y = data[frame, :, 1]
+        # z = data[frame, :, 2]
+        # x_center = np.mean(x)
+        # y_center = np.mean(y)
+        # z_center = np.mean(z)
+        # max_range = np.array([x.max()-x.min(), y.max()-y.min(), z.max()-z.min()]).max() / 2
+        # ax.set_xlim(x_center - max_range, x_center + max_range)
+        # ax.set_ylim(y_center - max_range, y_center + max_range)
+        # ax.set_zlim(z_center - max_range, z_center + max_range)
+        
+        ax.set_xlim(-x_lim, x_lim)
+        ax.set_ylim(-y_lim, y_lim)
+        ax.set_zlim(-z_lim, z_lim)
         
         # Add frame number in the top right corner
         for text in ax.texts:
@@ -93,6 +97,8 @@ def data_visualization(data, file_to_save = None, preview = False, speed = 500):
     # Display the animation
     if preview:
         plt.show()
+        
+    # fig.close();
 
 def combine_videos(video1_path, video2_path, output_path):
     ffmpeg_command = [
@@ -105,3 +111,49 @@ def combine_videos(video1_path, video2_path, output_path):
     ]
     
     subprocess.run(ffmpeg_command, check=True)
+    
+    
+def visualize_slider(data, hand_dims=[0, 3, 6, 8.5], epsilon = 15, file_to_save=None, preview=False, speed=500, x_lim=5.0, y_lim=10.0, z_lim=5.0):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlim([-x_lim, x_lim])
+    ax.set_ylim([0, y_lim])
+    ax.set_zlim([0, z_lim])
+
+    # Start and end points
+    A = np.array([0, hand_dims[0], 0])
+    B = np.array([0, hand_dims[1], 0])
+    C = np.array([0, hand_dims[2], 0])
+    D = np.array([0, hand_dims[3], 0])
+    
+    ax.view_init(elev=90, azim=0)  # Set view to top left corner
+
+    # Plot the stick
+    ax.plot([A[0], B[0], C[0], D[0]], [A[1], B[1], C[1], D[1]], [A[2], B[2], C[2], D[2]], 'k--')
+
+    # Plot red dot at the end
+    dot, = ax.plot([], [], [], 'ro')
+
+    def update(frame):
+        sorted_indices = np.argsort(data[frame])
+        min_indices = sorted_indices[:2]  
+        close_points = [min(min_indices), max(min_indices)]
+        
+        if data[frame][close_points[0]] + data[frame][close_points[1]] < hand_dims[close_points[1]] - hand_dims[close_points[0]] + epsilon:
+            location = hand_dims[close_points[0]] + (data[frame][close_points[0]]) / (data[frame][close_points[0]] + data[frame][close_points[1]]) * (hand_dims[close_points[1]] - hand_dims[close_points[0]])
+            dot.set_data([0], [location])
+            dot.set_3d_properties([0])
+        else:
+            dot.set_data([], [])
+            dot.set_3d_properties([])
+            
+        return dot,
+
+    # Create animation
+    anim = FuncAnimation(fig, update, frames=len(data), interval=speed)
+
+    if preview:
+        plt.show()
+
+    if file_to_save:
+        anim.save(file_to_save, writer='ffmpeg')

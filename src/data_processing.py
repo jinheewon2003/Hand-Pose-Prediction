@@ -24,15 +24,12 @@ def grouped_files(folder_path):
                 info[group] = [filename]
     return info
 
-def process_data(file_name, new_file_name):
+def process_data(file_name, new_file_name, mapping):
     # Open file and get data
     df = read_pkl_file(file_name)
 
     # Change to list
     mphands_data_list = np.array(df['mphands_data'].tolist())
-
-    # Define the mapping (new array pos: old array pos) based on 21 keypoints and original data
-    mapping = {0: 20, 1: 16, 2: 17, 3: 19, 4: 18, 5: 0, 6: 1, 7: 3, 8: 2, 9: 4, 10: 5, 11: 7, 12: 6, 13: 12, 14: 13, 15: 15, 16: 14, 17: 8, 18: 9, 19: 11, 20: 10}
 
     # Apply the mapping to rearrange the values within each row
     mapped_mphands_data_list = np.array([
@@ -45,6 +42,11 @@ def process_data(file_name, new_file_name):
 
     # Rearrange
     reshaped_array = flattened_list.reshape(mphands_data_list.shape)
+    
+    palm_size = np.linalg.norm(reshaped_array[0][0] - reshaped_array[0][9])
+    # Scale model to hand size
+    av_hand_size_cm = 8.5
+    reshaped_array = reshaped_array * av_hand_size_cm / palm_size
 
     # Save the modified PKL file
     new_df = df.copy()  # Create a copy of the original DataFrame
