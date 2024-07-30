@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import subprocess
+import json
 
 # Define the connections between points based on the 21 keypoints model
 connections = [
@@ -25,7 +26,7 @@ color_special_red = 'red'
 color_special_purple = 'purple'
 color_normal = 'blue'
 
-def data_visualization(data, file_to_save = None, preview = False, speed = 500, x_lim = 20.0, y_lim = 20.0, z_lim = 20.0):
+def data_visualization(data, file_to_save = None, preview = False, speed = 500, x_lim = 10.0, y_lim = 10.0, z_lim = 10.0, title=""):
     # Reshape data to (_, 21, 3) to split xyz values
     data = data.reshape(-1, 21, 3)
 
@@ -33,7 +34,7 @@ def data_visualization(data, file_to_save = None, preview = False, speed = 500, 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    ax.view_init(elev=20, azim=45)  # Set view to top left corner
+    ax.view_init(elev=20, azim=-135) # original 20, 45; changed to 20, -135 for slider angle
 
     lines = [ax.plot([], [], [])[0] for _ in range(len(connections))]
 
@@ -90,6 +91,8 @@ def data_visualization(data, file_to_save = None, preview = False, speed = 500, 
     num_frames = data.shape[0]
     ani = FuncAnimation(fig, update, frames=num_frames, init_func=init, blit=True, interval=speed)
 
+    plt.title(title)
+    
     # Save the animation as a video file
     if file_to_save:
         ani.save(file_to_save, writer='ffmpeg')
@@ -100,20 +103,38 @@ def data_visualization(data, file_to_save = None, preview = False, speed = 500, 
         
     # fig.close();
 
+def get_video_height(file_path):
+    command = [
+        'ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries',
+        'stream=height', '-of', 'json', file_path
+    ]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    video_info = json.loads(result.stdout)
+    return video_info['streams'][0]['height']
+
 def combine_videos(video1_path, video2_path, output_path):
+    # Get the heights of both videos
+    height1 = get_video_height(video1_path)
+    height2 = get_video_height(video2_path)
+
+    # Determine the minimum height
+    min_height = min(height1, height2)
+
+    # Construct the ffmpeg command with resizing
     ffmpeg_command = [
         'ffmpeg',
         '-i', video1_path,
         '-i', video2_path,
-        '-filter_complex', '[0:v][1:v]hstack=inputs=2[v]',
+        '-filter_complex', f'[0:v]scale=-1:{min_height}[v0];[1:v]scale=-1:{min_height}[v1];[v0][v1]hstack=inputs=2[v]',
         '-map', '[v]',
         output_path
     ]
-    
+
+    # Run the ffmpeg command
     subprocess.run(ffmpeg_command, check=True)
     
     
-def visualize_slider(data, hand_dims=[0, 3, 6, 8.5], epsilon = 15, file_to_save=None, preview=False, speed=500, x_lim=5.0, y_lim=10.0, z_lim=5.0):
+def visualize_slider(data, hand_dims=[0, 3, 6, 8.5], epsilon = 3, file_to_save=None, preview=False, speed=500, x_lim=5.0, y_lim=10.0, z_lim=5.0, title=""):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlim([-x_lim, x_lim])
@@ -139,8 +160,12 @@ def visualize_slider(data, hand_dims=[0, 3, 6, 8.5], epsilon = 15, file_to_save=
         min_indices = sorted_indices[:2]  
         close_points = [min(min_indices), max(min_indices)]
         
-        if data[frame][close_points[0]] + data[frame][close_points[1]] < hand_dims[close_points[1]] - hand_dims[close_points[0]] + epsilon:
-            location = hand_dims[close_points[0]] + (data[frame][close_points[0]]) / (data[frame][close_points[0]] + data[frame][close_points[1]]) * (hand_dims[close_points[1]] - hand_dims[close_points[0]])
+        if close_points[0] + 1 == close_points[1] and data[frame][close_points[0]] + data[frame][close_points[1]] < hand_dims[close_points[1]] - hand_dims[close_points[0]] + epsilon:
+            a = hand_dims[close_points[1]] - hand_dims[close_points[0]]
+            b = data[frame][close_points[0]]
+            c = data[frame][close_points[1]]
+            distance =(a**2 + b**2 - c**2) / (2*a)
+            location = hand_dims[close_points[0]] + distance
             dot.set_data([0], [location])
             dot.set_3d_properties([0])
         else:
@@ -152,6 +177,8 @@ def visualize_slider(data, hand_dims=[0, 3, 6, 8.5], epsilon = 15, file_to_save=
     # Create animation
     anim = FuncAnimation(fig, update, frames=len(data), interval=speed)
 
+    plt.title(title)
+    
     if preview:
         plt.show()
 

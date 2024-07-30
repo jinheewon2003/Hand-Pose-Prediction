@@ -43,10 +43,22 @@ def process_data(file_name, new_file_name, mapping):
     # Rearrange
     reshaped_array = flattened_list.reshape(mphands_data_list.shape)
     
-    palm_size = np.linalg.norm(reshaped_array[0][0] - reshaped_array[0][9])
+    palm_size_sum = 0
+    for i in range(20):
+        # Extract the coordinates of the two points
+        point1 = reshaped_array[i][0:3]  # (x, y, z) for point 1
+        point2 = reshaped_array[i][27:30]  # (x, y, z) for point 2
+
+        # Calculate the Euclidean distance
+        distance = np.linalg.norm(point1 - point2)
+        
+        # Sum the distances
+        palm_size_sum += distance
+    palm_size_avg = palm_size_sum / 20
+
     # Scale model to hand size
     av_hand_size_cm = 8.5
-    reshaped_array = reshaped_array * av_hand_size_cm / palm_size
+    reshaped_array = reshaped_array * av_hand_size_cm / palm_size_avg
 
     # Save the modified PKL file
     new_df = df.copy()  # Create a copy of the original DataFrame

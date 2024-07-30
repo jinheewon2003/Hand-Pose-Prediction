@@ -28,17 +28,16 @@ def workflow(files, file_root, root_folder, path_to_data = "data/", path_to_adj_
         data_to_add = read_pkl_file(filepath)
         mphands_data.extend(data_to_add['mphands_data'].tolist())
         eit_data.extend(data_to_add['eit_data'].tolist())
-    mphands_data = np.array(mphands_data)[:300] # TODO NEED TO FIX
-    eit_data = np.array(eit_data)[:300]
+    mphands_data = np.array(mphands_data)
+    eit_data = np.array(eit_data)
 
-    # Can block out after visualization is saved in visualizations folder
-    
-    #######
     # Data Visualization of original data
-    filename = file_root + ".mp4"
-    filepath = root_folder / ("visualizations/" + filename)
-    data_visualization(mphands_data, file_to_save=filepath, preview=False, speed = 500) # file_to_save=filepath
     #######
+    # filename = file_root + ".mp4"
+    # filepath = root_folder / ("visualizations/" + filename)
+    # data_visualization(mphands_data, file_to_save=filepath, preview=False, speed = 500) # file_to_save=filepath
+    #######
+    
     
     # Scale data to be more interpretable
     scaler_eit_data = MinMaxScaler()
@@ -60,7 +59,10 @@ def workflow(files, file_root, root_folder, path_to_data = "data/", path_to_adj_
     # Store predidcted mphands data
     filename = file_root + "_predicted.l"
     filepath = root_folder / ("predicted_ys/" + filename)
-    y_pred_saved = y_pred.reshape(-1, y_train.shape[1])
+    y_pred_saved = y_pred.reshape(-1, y_test.shape[1])
+    # print(y_pred.size)
+    # print(y_test.size)
+    # print(y_train.size)
     save_list_to_json_file(y_pred_saved.tolist(), filepath)
 
     # Store errors
@@ -70,17 +72,18 @@ def workflow(files, file_root, root_folder, path_to_data = "data/", path_to_adj_
     save_list_to_json_file(combined_errors, filepath)
 
     # Data visualization of predicted model
-    filename = file_root + "_first_split_lstm_model_predicted.mp4"
-    predicted_filepath = root_folder / ("visualizations/" + filename)
-    data_visualization(y_pred, predicted_filepath, preview=False, speed = 750)
+    # filename = file_root + "_first_split_lstm_model_predicted.mp4"
+    # predicted_filepath = root_folder / ("visualizations/" + filename)
+    # data_visualization(y_pred, predicted_filepath, preview=False, speed = 750)
 
-    filename = file_root + "_first_split_lstm_model_actual.mp4"
-    expected_filepath = root_folder / ("visualizations/" + filename)
-    data_visualization(y_test, expected_filepath, preview=False, speed = 750)
+    # filename = file_root + "_first_split_lstm_model_actual.mp4"
+    # expected_filepath = root_folder / ("visualizations/" + filename)
+    # data_visualization(y_test, expected_filepath, preview=False, speed = 750)
 
-    filename = file_root + "_first_split_lstm_model_compared.mp4"
-    compared_filepath = root_folder / ("visualizations/" + filename)
-    combine_videos(predicted_filepath, expected_filepath, compared_filepath)
+    # filename = file_root + "_first_split_lstm_model_compared.mp4"
+    # compared_filepath = root_folder / ("visualizations/" + filename)
+    # combine_videos(predicted_filepath, expected_filepath, compared_filepath)
+    
 
 
 # Files to process

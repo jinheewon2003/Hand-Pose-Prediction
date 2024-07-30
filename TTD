@@ -1,0 +1,70 @@
+by 6/20
+1. Try different 4 class model for slider to see which one it falls on (1 - 2 joint, 2 - 3 joint, 3 - 4 joint, off)
+> Could gradually try increasing class number
+> Make sure data encompasses all classes (ie make sure there is at least one data on end of both sides as well)
+> Revisualize
+
+> Consider distance to line distance instead of point to point use (2)
+
+2. Better loss function
+
+3. Fix ML model
+
+by 6/5
+1. Run on all 6 datasets
+[DONE]
+
+2. Visualize each dataset has 
+> Two spreadsheets (whole visualization vs only distances) wtih 4 (5th column is average of 4) by 6 chart
+
+3. Video 
+> first two are ground truth
+> third is from only distance prediction
+> fourth is from whole visualization prediction
+> add graph titles
+> combine
+[DONE]
+
+4. Fix epsilon
+[DONE]
+
+[pick from 4 electrodes]
+
+II.
+1. Fix ML models
+
+2. Clean + integrate code 
+
+3. Run on add previous datasets
+
+
+
+by 5/29 (Wednesday)
+1. Add MSE for predictions based on only distances (for four points) and from visualization (from old code + extract) [even if not direct comparison]
+    > Get 8 numbers
+    > Have video integration
+
+
+by 5/27
+1. Fix slider indexing issue
+
+changed to only show if point is actually closest to two adjacent points
+
+2. Fix hand size error
+
+fixed to avg of first 20 framess
+
+fixed logic error where instead of comparing the 0 and 9 points it was comparing the 0th and 9th locations, which are the x of the 0th point and the x of the 3rd point
+
+3. Adjusted visualization angles
+
+changed to top right corner
+
+4. Change distance epsilon
+
+made smaller to match visualization + expected
+
+5. Fix distance between index error
+
+Instead of getting the ratio between two points, calculate the actual distance based on the info provided w the formula
+(a^2 + b^2 - c^2)/2a where a is the distance between joints in the finger, b is the distance from the point given to the first joint, and c is the distance from the point to the second joint
